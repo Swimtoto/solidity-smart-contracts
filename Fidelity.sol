@@ -30,5 +30,5 @@ contract Fidelity {
     }
     
     function Fidelity(){}
-    function kill(){}
+    function kill(){ selfdestruct(owner);}
 }
