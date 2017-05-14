@@ -1,108 +1,80 @@
 pragma solidity ^0.4.0;
 
+contract Ballot {
 
-// Simple smart-contract for a referundum (YES/NO answer only)
+	address owner=0x004fEf376f2E29f1aF441CA0D64650380b022F89;
 
-// Add a deadline for voting
-
-
-contract Voting {
-    // Variable
-    
-    struct Voter {
-        address ID;
-        bool hasVoted;
-        string choice;
+    struct Member{
+        address name;
+        uint numberOfVotes;
+        bool proposed;
+        uint balance;
     }
-    
-    struct Proposal {
+
+    struct Proposal{
         string name;
-        uint voteReceived;
+        address creator;
+        string description;
+        uint numberOfVotes;
     }
-    
-    Voter[] public registered;  // List of people registred to vote
-    Voter[] public listOfVoter; // List of people who voted - Useful for statistics
-    Proposal[2] public count;
-    
-    address public chairperson;
-    
-    uint public deadline;
-    
-    // Constructor
-    function Voting() {
-        chairperson = msg.sender;
-        
-        // The "poll" is launched Sunday morning at 9.00 am and will be closed at 9.00 pm
-        uint deadline = now + 12 hours;
-        count[0] = Proposal("Yes", 0);
-        count[1] = Proposal("No", 0);
+
+    Proposal[] proposals;
+    mapping(address => Member) members;
+    uint current_block_number;
+    uint deadline;
+  
+    //@notice Create a new member
+    function CreateMember(){
+        Member member;
+        member.numberOfVotes=0;
+        member.proposed=false;
+        member.name=msg.sender;
+        member.balance=0;
     }
-    
-    function vote(_voter) {
-        
-        // Check if the voter is authorized
-        bool authorized = false;
-        for(int i = 0; i < registered.length; i++) {
-            if(_voter.ID == registered[i].ID)
-                authorized = true;
-        }
-        
-        // The voter choose his vote: Yes or No by clicking a button on the webpage (buttonNo / buttonYes)
-        
-        
-        
-        if((authorized) && (!_voter.hasVoted)) {
-            if(buttonClicked == buttonNo) {
-                count[1].voteReceived++;
-                _voter.hasVoted = true;
+
+    //@notice create a new proposal if this is possible
+    function CreateProposal(string _name, string _descr){
+        if (!members[msg.sender].proposed){
+            Proposal prop;
+            prop.name=_name;
+            prop.creator=msg.sender;
+            prop.description=_descr;
+            prop.numberOfVotes=1;
+            if (proposals.length<5){
+                proposals.length++;
+                proposals[proposals.length-1]=prop;
             }
-            
-            else if (buttonClicked == buttonYes) {
-                count[0].voteReceived++;
-                _voter.hasVoted = true;
+            if (proposals.length==5){
+                deadline = current_block_number + 556070; //A deadline of 1 month
             }
-            // Add the voter to the list of people who voted
-            listOfVoter.push(_voter);
         }
-        
-        
-        
     }
-    
-    // Find the winning proposal at the end of countdown
-    function winningProposal() returns (string winningProposal) {
-        winningProposal = "";
-        if(count[0].voteReceived > count[1].voteReceive)
-            winningProposal = "Yes";
-        else if(count[0].voteReceived < count[1].voteReceive)
-            winningProposal = "No";
-        else
-            winningProposal = "Draw";
+
+    function addTokenToBalance(uint j){
+      members[msg.sender].balance+=j;
     }
-    
-    
-    
-    
-    
-    // Event
-    //event deadlineReached
-    
-    // Modifier
-    
-    
-    // Kill
+
+    function Vote(uint prop){
+        if (members[msg.sender].numberOfVotes>0 && current_block_number<deadline && members[msg.sender].balance>0 && members[msg.sender].name!=proposals[prop].creator){
+        proposals[prop].numberOfVotes++;}
+    }
+
+    function WinningProposal() returns(string){
+        if(current_block_number>deadline){
+            uint max=0;
+            for (uint i=0;i<proposals.length;i++){
+                if (proposals[i].numberOfVotes>proposals[max].numberOfVotes){
+                    max=i;
+                }
+            }
+            return proposals[i].name;
+        }
+        return "No winner yet !";
+    }
+
+    function Ballot(){
+        current_block_number =block.number;
+    }
+
+    function kill(){if (msg.sender=owner) selfdestruct(owner); }
 }
-
-
-
-// @notice Description complète de la fonction
-// @param nomParamètre Description
-// function nomFonction(param) modifiers() returns() {
-// }
-
-
-
-
-
-
-
