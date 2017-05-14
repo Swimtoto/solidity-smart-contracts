@@ -2,6 +2,8 @@ pragma solidity ^0.4.0;
 
 contract Fidelity {
     
+	address owner=0x004fEf376f2E29f1aF441CA0D64650380b022F89;
+
     struct Account {
         address owner;
         uint numberOfFidelityPoints;
@@ -30,5 +32,5 @@ contract Fidelity {
     }
     
     function Fidelity(){}
-    function kill(){ selfdestruct(owner);}
+    function kill(){if (msg.sender=owner) selfdestruct(owner); }
 }
